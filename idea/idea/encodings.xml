@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/buffer/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/buffer/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-dns/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-haproxy/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-http/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-http/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-http2/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-http2/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-memcache/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-mqtt/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-redis/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-smtp/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-socks/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-stomp/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec-xml/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/codec/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/dev-tools/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/example/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/example/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/handler-proxy/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/handler/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/handler/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/microbench/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/microbench/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/resolver-dns-native-macos/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/resolver-dns/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/resolver-dns/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/resolver/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/testsuite-autobahn/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/testsuite-http2/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/testsuite-native-image-client-runtime-init/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/testsuite-native-image-client/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/testsuite-native-image-client/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/testsuite-native-image/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/testsuite/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport-native-epoll/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport-native-kqueue/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport-native-unix-common-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport-native-unix-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport-rxtx/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport-sctp/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport-udt/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/transport/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

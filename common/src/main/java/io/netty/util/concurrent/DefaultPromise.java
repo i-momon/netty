@@ -480,8 +480,13 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
                 checkNotNull(listener, "listener"));
     }
 
+    /**
+     * 通知所有listener
+     */
     private void notifyListeners() {
+        // 返回EventExecutor执行器
         EventExecutor executor = executor();
+        //
         if (executor.inEventLoop()) {
             final InternalThreadLocalMap threadLocals = InternalThreadLocalMap.get();
             final int stackDepth = threadLocals.futureListenerStackDepth();

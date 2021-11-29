@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="netty-transport-native-epoll" />
+        <module name="netty-buffer" />
+        <module name="netty-codec-socks" />
+        <module name="netty-codec-dns" />
+        <module name="netty-dev-tools" />
+        <module name="netty-common" />
+        <module name="netty-codec-http2" />
+        <module name="netty-transport-blockhound-tests" />
+        <module name="netty-codec-stomp" />
+        <module name="netty-testsuite-native" />
+        <module name="netty-codec-xml" />
+        <module name="netty-transport-native-kqueue" />
+        <module name="netty-transport" />
+        <module name="netty-codec-haproxy" />
+        <module name="netty-transport-rxtx" />
+        <module name="netty-codec" />
+        <module name="netty-testsuite-http2" />
+        <module name="netty-testsuite-shading" />
+        <module name="netty-transport-native-unix-common" />
+        <module name="netty-all" />
+        <module name="netty-testsuite-autobahn" />
+        <module name="netty-testsuite-native-image-client-runtime-init" />
+        <module name="netty-resolver-dns-native-macos" />
+        <module name="netty-handler-proxy" />
+        <module name="netty-handler" />
+        <module name="netty-codec-mqtt" />
+        <module name="netty-codec-memcache" />
+        <module name="netty-codec-http" />
+        <module name="netty-codec-smtp" />
+        <module name="netty-transport-sctp" />
+        <module name="netty-transport-native-unix-common-tests" />
+        <module name="netty-testsuite-native-image" />
+        <module name="netty-codec-redis" />
+        <module name="netty-transport-udt" />
+        <module name="netty-testsuite" />
+        <module name="netty-resolver-dns" />
+        <module name="netty-testsuite-osgi" />
+        <module name="netty-resolver" />
+        <module name="netty-microbench" />
+        <module name="netty-example" />
+        <module name="netty-testsuite-native-image-client" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="8" />
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="netty-all" options="-Xlint:-options" />
+      <module name="netty-buffer" options="-Xlint:-options" />
+      <module name="netty-codec" options="-Xlint:-options" />
+      <module name="netty-codec-dns" options="-Xlint:-options" />
+      <module name="netty-codec-haproxy" options="-Xlint:-options" />
+      <module name="netty-codec-http" options="-Xlint:-options" />
+      <module name="netty-codec-http2" options="-Xlint:-options" />
+      <module name="netty-codec-memcache" options="-Xlint:-options" />
+      <module name="netty-codec-mqtt" options="-Xlint:-options" />
+      <module name="netty-codec-redis" options="-Xlint:-options" />
+      <module name="netty-codec-smtp" options="-Xlint:-options" />
+      <module name="netty-codec-socks" options="-Xlint:-options" />
+      <module name="netty-codec-stomp" options="-Xlint:-options" />
+      <module name="netty-codec-xml" options="-Xlint:-options" />
+      <module name="netty-common" options="-Xlint:-options" />
+      <module name="netty-example" options="-Xlint:-options" />
+      <module name="netty-handler" options="-Xlint:-options" />
+      <module name="netty-handler-proxy" options="-Xlint:-options" />
+      <module name="netty-microbench" options="-Xlint:-options" />
+      <module name="netty-resolver" options="-Xlint:-options" />
+      <module name="netty-resolver-dns" options="-Xlint:-options" />
+      <module name="netty-resolver-dns-native-macos" options="-Xlint:-options" />
+      <module name="netty-testsuite" options="-Xlint:-options" />
+      <module name="netty-testsuite-autobahn" options="-Xlint:-options" />
+      <module name="netty-testsuite-http2" options="-Xlint:-options" />
+      <module name="netty-testsuite-native" options="-Xlint:-options" />
+      <module name="netty-testsuite-native-image" options="-Xlint:-options" />
+      <module name="netty-testsuite-native-image-client" options="-Xlint:-options" />
+      <module name="netty-testsuite-native-image-client-runtime-init" options="-Xlint:-options" />
+      <module name="netty-testsuite-osgi" options="-Xlint:-options" />
+      <module name="netty-testsuite-shading" options="-Xlint:-options" />
+      <module name="netty-transport" options="-Xlint:-options" />
+      <module name="netty-transport-blockhound-tests" options="-Xlint:-options" />
+      <module name="netty-transport-native-epoll" options="-Xlint:-options" />
+      <module name="netty-transport-native-kqueue" options="-Xlint:-options" />
+      <module name="netty-transport-native-unix-common" options="-Xlint:-options" />
+      <module name="netty-transport-native-unix-common-tests" options="-Xlint:-options" />
+      <module name="netty-transport-rxtx" options="-Xlint:-options" />
+      <module name="netty-transport-sctp" options="-Xlint:-options" />
+      <module name="netty-transport-udt" options="-Xlint:-options" />
+    </option>
+  </component>
+</project>

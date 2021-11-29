@@ -33,6 +33,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 存储Netty和所有FastThreadLocal的线程局部变量的内部数据结构
  * The internal data structure that stores the thread-local variables for Netty and all {@link FastThreadLocal}s.
  * Note that this class is for internal use only and is subject to change at any time.  Use {@link FastThreadLocal}
  * unless you know what you are doing.
@@ -40,14 +41,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(InternalThreadLocalMap.class);
+    // 定义一个ThreadLocal类型变量 slowThreadLocalMap
     private static final ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap =
             new ThreadLocal<InternalThreadLocalMap>();
-    private static final AtomicInteger nextIndex = new AtomicInteger();
 
+    private static final AtomicInteger nextIndex = new AtomicInteger();
+    // 默认数组列表的深度
     private static final int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
+    // 字符串生成器的初始化大小
     private static final int STRING_BUILDER_INITIAL_SIZE;
+    // 字符串生成器的最大大小
     private static final int STRING_BUILDER_MAX_SIZE;
+    // 处理程序共享绶存初始容量
     private static final int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
+    // 索引变量表初始大小
     private static final int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
 
     public static final Object UNSET = new Object();
@@ -86,6 +93,12 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
     }
 
+    /**
+     * 如果设置了就获取否则返回null
+     * 获取当前线程 如果是FastThreadLocalThread对象，则直接获取InternalThreadLocalMap对象
+     * 否则上ThreadLocal获取
+     * @return
+     */
     public static InternalThreadLocalMap getIfSet() {
         Thread thread = Thread.currentThread();
         if (thread instanceof FastThreadLocalThread) {
@@ -94,6 +107,10 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return slowThreadLocalMap.get();
     }
 
+    /**
+     *
+     * @return
+     */
     public static InternalThreadLocalMap get() {
         Thread thread = Thread.currentThread();
         if (thread instanceof FastThreadLocalThread) {
@@ -103,15 +120,30 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         }
     }
 
+    /**
+     *
+     * @param thread
+     * @return
+     */
     private static InternalThreadLocalMap fastGet(FastThreadLocalThread thread) {
+        // 获取线程的成员变量threadLocalMap()
         InternalThreadLocalMap threadLocalMap = thread.threadLocalMap();
+        // 如果为空则一个新的设置到线程当中
         if (threadLocalMap == null) {
             thread.setThreadLocalMap(threadLocalMap = new InternalThreadLocalMap());
         }
         return threadLocalMap;
     }
 
+
+    /**
+     * Netty在此还是尽量避免使用jdk提供的 threadLocalMap，因为在处理速度上Netty的效率是优于jdk的jdk的，因为jdk的探测查询方式和索引计算方式导致效率低。
+     * 另外threadLocalMap中的key为弱引用，在下一次GC时会被回收掉，但是value是强引用，是不会回收掉的，这里有发生内存泄漏的可能
+     * ————————————————
+     * @return
+     */
     private static InternalThreadLocalMap slowGet() {
+        // 在如果Jdk获取null，还是用了Netty提供的方式
         InternalThreadLocalMap ret = slowThreadLocalMap.get();
         if (ret == null) {
             ret = new InternalThreadLocalMap();
@@ -308,16 +340,17 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         this.localChannelReaderStackDepth = localChannelReaderStackDepth;
     }
 
-    public Object indexedVariable(int index) {
-        Object[] lookup = indexedVariables;
-        return index < lookup.length? lookup[index] : UNSET;
-    }
+public Object indexedVariable(int index) {
+    Object[] lookup = indexedVariables;
+    return index < lookup.length? lookup[index] : UNSET;
+}
 
     /**
      * @return {@code true} if and only if a new thread-local variable has been created
      */
     public boolean setIndexedVariable(int index, Object value) {
         Object[] lookup = indexedVariables;
+        // index 是从FastThreadLocal中传入的值，初始值为1（自增），因为0被静态变量variablesToRemoveIndex抢占了
         if (index < lookup.length) {
             Object oldValue = lookup[index];
             lookup[index] = value;

@@ -72,9 +72,12 @@ public final class EchoClient {
 
             // Start the client.
             ChannelFuture f = b.connect(HOST, PORT).sync();
+            System.out.println("before-----");
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
+
+            System.out.println("after-----");
         } finally {
             // Shut down the event loop to terminate all threads.
             group.shutdownGracefully();

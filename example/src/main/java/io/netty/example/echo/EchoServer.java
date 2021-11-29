@@ -48,8 +48,9 @@ public final class EchoServer {
             sslCtx = null;
         }
 
-        // Configure the server.
+        // Configure the server. 处理客户端的连接请求，并将accept的连接注到 workerGroup
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        // 负责建立已建立的客户端通道上的数据读写
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         final EchoServerHandler serverHandler = new EchoServerHandler();
         try {

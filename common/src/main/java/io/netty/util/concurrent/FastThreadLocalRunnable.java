@@ -17,6 +17,9 @@ package io.netty.util.concurrent;
 
 import io.netty.util.internal.ObjectUtil;
 
+/**
+ * 封装普通Rannable对象，在执行完run方法调用FastThreadLocal.removeAll();
+ */
 final class FastThreadLocalRunnable implements Runnable {
     private final Runnable runnable;
 

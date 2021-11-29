@@ -29,8 +29,10 @@ public abstract class AbstractFuture<V> implements Future<V> {
 
     @Override
     public V get() throws InterruptedException, ExecutionException {
+        //
         await();
-
+        // Throwable是Java语言中所有错误或异类的超类
+        // cause是返回I/O失败的原因
         Throwable cause = cause();
         if (cause == null) {
             return getNow();
