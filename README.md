@@ -47,7 +47,11 @@ are listed below:
  * `io.netty.codec.socks`
  * `io.netty.codec.stomp`
  * `io.netty.codec.xml`
- * `io.netty.common`
+ * `io.netty.common` 
+ 编译报错,q缺少io.netty.conllection包报错，解决方案
+ 1. 修改编译版本：将所有的Maven Compiler编译版本改成1.8版本，然后在终端执行mvn clean 和mvn install
+ 2. 在common目录下执行 mvn clean compile -Dcheckstyle.skip=true
+ 
  * `io.netty.handler`
  * `io.netty.handler.proxy`
  * `io.netty.resolver`
