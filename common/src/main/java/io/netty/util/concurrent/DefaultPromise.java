@@ -236,20 +236,25 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @Override
     public Promise<V> await() throws InterruptedException {
+        // 先检测result是否有效
         if (isDone()) {
             return this;
         }
 
+        // 如果线程是中断状态
         if (Thread.interrupted()) {
             throw new InterruptedException(toString());
         }
 
         checkDeadLock();
 
+        // 添加锁
         synchronized (this) {
+            // 如果result还不是有效值，则维护waiters数量
             while (!isDone()) {
                 incWaiters();
                 try {
+                    // 阻塞
                     wait();
                 } finally {
                     decWaiters();
@@ -333,6 +338,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     @Override
     public V get() throws InterruptedException, ExecutionException {
         Object result = this.result;
+        // 如果result不是有效值，那么就等待再获取一次
         if (!isDone0(result)) {
             await();
             result = this.result;
@@ -482,11 +488,13 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     /**
      * 通知所有listener
+     * 获取EventExecutor 其实就是EventLoop，判断执行EventExecutor的线程是否与当前的一致
+     * 如果一致则调用notifyListenersNow()方法执行Listener
+     * 不一致则将任务封装成Runnable提交到任务队列中等待队列
      */
     private void notifyListeners() {
         // 返回EventExecutor执行器
         EventExecutor executor = executor();
-        //
         if (executor.inEventLoop()) {
             final InternalThreadLocalMap threadLocals = InternalThreadLocalMap.get();
             final int stackDepth = threadLocals.futureListenerStackDepth();
@@ -541,6 +549,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     private void notifyListenersNow() {
         Object listeners;
+        // 添加锁 赋值listeners 与notifyingListeners
         synchronized (this) {
             // Only proceed if there are listeners to notify and we are not already notifying listeners.
             if (notifyingListeners || this.listeners == null) {
@@ -550,6 +559,9 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             listeners = this.listeners;
             this.listeners = null;
         }
+        // 自旋不会退出，一般执行就是执行下去
+        // 具体的通知逻辑在 notifyListeners0
+        // 由于自旋 变量需要锁住代码块进行赋值
         for (;;) {
             if (listeners instanceof DefaultFutureListeners) {
                 notifyListeners0((DefaultFutureListeners) listeners);
@@ -607,6 +619,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     private boolean setSuccess0(V result) {
+        // 如果传入的Result是null 则取 new Object();
         return setValue0(result == null ? SUCCESS : result);
     }
 
@@ -615,6 +628,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     private boolean setValue0(Object objResult) {
+        // 如果当前this 是null || UNCANCELLABLE 则复写objResult
         if (RESULT_UPDATER.compareAndSet(this, null, objResult) ||
             RESULT_UPDATER.compareAndSet(this, UNCANCELLABLE, objResult)) {
             if (checkNotifyWaiters()) {
@@ -657,6 +671,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     private boolean await0(long timeoutNanos, boolean interruptable) throws InterruptedException {
+        // 如果 result是空的表示则返回自已不阻塞
         if (isDone()) {
             return true;
         }
@@ -665,6 +680,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             return isDone();
         }
 
+        // 如果 当前线程是中断状态
         if (interruptable && Thread.interrupted()) {
             throw new InterruptedException(toString());
         }
@@ -678,9 +694,12 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             boolean interrupted = false;
             try {
                 long waitTime = timeoutNanos;
+                // 发果result不为空 并且waitTime大于0
                 while (!isDone() && waitTime > 0) {
+                    // 维护waiter数量
                     incWaiters();
                     try {
+                        // 阻塞
                         wait(waitTime / 1000000, (int) (waitTime % 1000000));
                     } catch (InterruptedException e) {
                         if (interruptable) {
@@ -689,6 +708,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
                             interrupted = true;
                         }
                     } finally {
+                        // 维护waiters数量
                         decWaiters();
                     }
                     // Check isDone() in advance, try to avoid calculating the elapsed time later.
