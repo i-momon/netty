@@ -39,8 +39,11 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private static final int MAX_LISTENER_STACK_DEPTH = Math.min(8,
             SystemPropertyUtil.getInt("io.netty.defaultPromise.maxListenerStackDepth", 8));
     @SuppressWarnings("rawtypes")
+
+    // AtomicReferenceFieldUpdater是一个反射工具类，对volatile类型的字段进行原子更新
     private static final AtomicReferenceFieldUpdater<DefaultPromise, Object> RESULT_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(DefaultPromise.class, Object.class, "result");
+
     private static final Object SUCCESS = new Object();
     private static final Object UNCANCELLABLE = new Object();
     private static final CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(
