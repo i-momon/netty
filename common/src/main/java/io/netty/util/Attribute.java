@@ -17,6 +17,7 @@ package io.netty.util;
 
 /**
  * An attribute which allows to store a value reference. It may be updated atomically and so is thread-safe.
+ * 允许存储值引用属性，它能厚子更新值 是线程安全的
  *
  * @param <T>   the type of the value it holds.
  */
@@ -24,11 +25,13 @@ public interface Attribute<T> {
 
     /**
      * Returns the key of this attribute.
+     * 返回这个属性的key
      */
     AttributeKey<T> key();
 
     /**
      * Returns the current value, which may be {@code null}
+     * 返回当前值，也可能返回Null
      */
     T get();
 
@@ -39,12 +42,15 @@ public interface Attribute<T> {
 
     /**
      *  Atomically sets to the given value and returns the old value which may be {@code null} if non was set before.
+     *  原子更新值并返回旧值，如果之前设置了non有可能返回Null
      */
     T getAndSet(T value);
 
     /**
      *  Atomically sets to the given value if this {@link Attribute}'s value is {@code null}.
+     *  如果此 Attribute 的值为Null，则原子设置为给定值
      *  If it was not possible to set the value as it contains a value it will just return the current value.
+     *  如果设置值失败了，因为包含一个值它将返回当前值
      */
     T setIfAbsent(T value);
 
@@ -70,6 +76,8 @@ public interface Attribute<T> {
     /**
      * Atomically sets the value to the given updated value if the current value == the expected value.
      * If it the set was successful it returns {@code true} otherwise {@code false}.
+     * 原子更新值 ，如果当前值与预期值相等则更新
+     * 如果设置成功它返回true，否则返回false
      */
     boolean compareAndSet(T oldValue, T newValue);
 

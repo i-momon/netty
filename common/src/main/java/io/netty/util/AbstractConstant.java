@@ -22,13 +22,14 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public abstract class AbstractConstant<T extends AbstractConstant<T>> implements Constant<T> {
 
+    // AtomicLong 是作用是对长整形 进行原子操作
     private static final AtomicLong uniqueIdGenerator = new AtomicLong();
     private final int id;
     private final String name;
     private final long uniquifier;
 
     /**
-     * Creates a new instance.
+     * Creates a new instance. 创建一个新实例
      */
     protected AbstractConstant(int id, String name) {
         this.id = id;

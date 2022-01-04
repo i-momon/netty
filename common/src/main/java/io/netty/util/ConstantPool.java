@@ -16,21 +16,25 @@
 
 package io.netty.util;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
-import static io.netty.util.internal.ObjectUtil.checkNonEmpty;
-
 import io.netty.util.internal.PlatformDependent;
 
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.netty.util.internal.ObjectUtil.checkNonEmpty;
+import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * A pool of {@link Constant}s.
  *
  * @param <T> the type of the constant
  */
+
+// 这是一个常量池，使用线程安全的Map存储，使用Long型生成一个Constant唯一标识。使用Map API putIfAbsent、get、containsKey等操作
+// 注意一个方法 newConstant是需要子类复写的
 public abstract class ConstantPool<T extends Constant<T>> {
 
+    // ConcurrentMap是一个接口，是一个能够支持并发访问的Java.util.Map集合
     private final ConcurrentMap<String, T> constants = PlatformDependent.newConcurrentHashMap();
 
     private final AtomicInteger nextId = new AtomicInteger(1);
@@ -50,6 +54,8 @@ public abstract class ConstantPool<T extends Constant<T>> {
      * If there's no such {@link Constant}, a new one will be created and returned.
      * Once created, the subsequent calls with the same {@code name} will always return the previously created one
      * (i.e. singleton.)
+     * 返回分派指定的Constant，如果没有这个Constant则会创建并返回一个新的
+     * 创建后具有相同name后续调用始终返回先前创建的调用（单例）
      *
      * @param name the name of the {@link Constant}
      */

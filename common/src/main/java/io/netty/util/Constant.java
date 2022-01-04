@@ -17,16 +17,19 @@ package io.netty.util;
 
 /**
  * A singleton which is safe to compare via the {@code ==} operator. Created and managed by {@link ConstantPool}.
+ * 一个可以通过 == 运算符进行比较的单例，由ConstantPool创建和管理
  */
 public interface Constant<T extends Constant<T>> extends Comparable<T> {
 
     /**
      * Returns the unique number assigned to this {@link Constant}.
+     * 返回唯一编号赋值给Constant，这个自增的id用一个很大的用处，用来做二分查找
      */
     int id();
 
     /**
      * Returns the name of this {@link Constant}.
+     * 返回此Constant名称
      */
     String name();
 }

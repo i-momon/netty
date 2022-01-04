@@ -18,6 +18,7 @@ package io.netty.util;
 /**
  * Key which can be used to access {@link Attribute} out of the {@link AttributeMap}. Be aware that it is not be
  * possible to have multiple keys with the same name.
+ * 可用于访问AttributeMap中的键，不可能会有多个相同的键值
  *
  * @param <T>   the type of the {@link Attribute} which can be accessed via this {@link AttributeKey}.
  */
@@ -33,6 +34,7 @@ public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
 
     /**
      * Returns the singleton instance of the {@link AttributeKey} which has the specified {@code name}.
+     * 返回单例AttributeKey实例，通过name
      */
     @SuppressWarnings("unchecked")
     public static <T> AttributeKey<T> valueOf(String name) {

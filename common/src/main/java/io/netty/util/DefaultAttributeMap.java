@@ -28,13 +28,17 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  */
 public class DefaultAttributeMap implements AttributeMap {
 
+    // 利用原子更新特性 DefaultAttributeMap类中 字段类型DefaultAttribute[]， 字段名称为attributes
     private static final AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(DefaultAttributeMap.class, DefaultAttribute[].class, "attributes");
+
+
     private static final DefaultAttribute[] EMPTY_ATTRIBUTES = new DefaultAttribute[0];
 
     /**
      * Similarly to {@code Arrays::binarySearch} it perform a binary search optimized for this use case, in order to
      * save polymorphic calls (on comparator side) and unnecessary class checks.
+     * 与Arrays::binarySearch相似使用二分查找优化查找，为了节省查找和不需要类检查
      */
     private static int searchAttributeByKey(DefaultAttribute[] sortedAttributes, AttributeKey<?> key) {
         int low = 0;
@@ -49,6 +53,7 @@ public class DefaultAttributeMap implements AttributeMap {
             }
             int midValKeyId = midValKey.id();
             int keyId = key.id();
+            // 如果两个AttributeKey对象不一样抛出异常
             assert midValKeyId != keyId;
             boolean searchRight = midValKeyId < keyId;
             if (searchRight) {
@@ -61,9 +66,17 @@ public class DefaultAttributeMap implements AttributeMap {
         return -(low + 1);
     }
 
+    /**
+     * 在sortedSrc数组中找到插入位置index，将sortedSrc从index开始的往后的数据迁到copy数组中，再将小于index的数据迁移进去
+     * @param sortedSrc
+     * @param srcLength
+     * @param copy
+     * @param toInsert
+     */
     private static void orderedCopyOnInsert(DefaultAttribute[] sortedSrc, int srcLength, DefaultAttribute[] copy,
                                             DefaultAttribute toInsert) {
         // let's walk backward, because as a rule of thumb, toInsert.key.id() tends to be higher for new keys
+        // 这里有个小技巧，从后往前遍历一般新键会在后面，减少查找次数
         final int id = toInsert.key.id();
         int i;
         for (i = srcLength - 1; i >= 0; i--) {
@@ -83,6 +96,7 @@ public class DefaultAttributeMap implements AttributeMap {
 
     private volatile DefaultAttribute[] attributes = EMPTY_ATTRIBUTES;
 
+    // 根椐AttributeKey 获取Attribute如果没有找到Attribute则创建一个Attribute
     @SuppressWarnings("unchecked")
     @Override
     public <T> Attribute<T> attr(AttributeKey<T> key) {
@@ -90,7 +104,9 @@ public class DefaultAttributeMap implements AttributeMap {
         DefaultAttribute newAttribute = null;
         for (;;) {
             final DefaultAttribute[] attributes = this.attributes;
+            // 根椐key查找在attributes数组中的位置
             final int index = searchAttributeByKey(attributes, key);
+
             final DefaultAttribute[] newAttributes;
             if (index >= 0) {
                 final DefaultAttribute attribute = attributes[index];
@@ -99,6 +115,7 @@ public class DefaultAttributeMap implements AttributeMap {
                     return attribute;
                 }
                 // let's try replace the removed attribute with a new one
+                // 让我们用新的属性替换已删除的属性
                 if (newAttribute == null) {
                     newAttribute = new DefaultAttribute<T>(this, key);
                 }
@@ -125,6 +142,15 @@ public class DefaultAttributeMap implements AttributeMap {
         return searchAttributeByKey(attributes, key) >= 0;
     }
 
+    /**
+     * 如果匹配了，则删除属性
+     * 先查找attribute，找不到则返回
+     * 根椐索引找到attribute ， 判断key()是否要相等
+     * 删除掉元素后做copy操作
+     * @param key
+     * @param value
+     * @param <T>
+     */
     private <T> void removeAttributeIfMatch(AttributeKey<T> key, DefaultAttribute<T> value) {
         for (;;) {
             final DefaultAttribute[] attributes = this.attributes;
@@ -156,6 +182,7 @@ public class DefaultAttributeMap implements AttributeMap {
     @SuppressWarnings("serial")
     private static final class DefaultAttribute<T> extends AtomicReference<T> implements Attribute<T> {
 
+        // AtomicReferenceFieldUpdater 这是一个基于反射的工具类，它能对指定类的【指定的volatile引用字段】进行【原子更新】。(注意这个字段不能是private的) 简单理解：就是对某个类中，被volatile修饰的字段进行原子更新。
         private static final AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(DefaultAttribute.class,
                                                        DefaultAttributeMap.class, "attributeMap");
@@ -180,7 +207,9 @@ public class DefaultAttributeMap implements AttributeMap {
 
         @Override
         public T setIfAbsent(T value) {
+            // 一直自旋比较当前this是不是null，如果是的就更新为value，如果没有更新成功进行while 循环里面，这一步相当于初始化了
             while (!compareAndSet(null, value)) {
+                // 获取当前存储的值，如果不为空就返回
                 T old = get();
                 if (old != null) {
                     return old;
@@ -193,6 +222,7 @@ public class DefaultAttributeMap implements AttributeMap {
         public T getAndRemove() {
             final DefaultAttributeMap attributeMap = this.attributeMap;
             final boolean removed = attributeMap != null && MAP_UPDATER.compareAndSet(this, attributeMap, null);
+            // 设置新值返回旧值
             T oldValue = getAndSet(null);
             if (removed) {
                 attributeMap.removeAttributeIfMatch(key, this);
