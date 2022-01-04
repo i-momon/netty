@@ -31,7 +31,7 @@ public interface Attribute<T> {
 
     /**
      * Returns the current value, which may be {@code null}
-     * 返回当前值，也可能返回Null
+     * 返回当前值，也可能返回Nulls
      */
     T get();
 
