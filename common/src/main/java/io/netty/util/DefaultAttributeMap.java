@@ -26,6 +26,11 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  * copy-on-write approach on the modify path.<br> Attributes lookup and remove exibit {@code O(logn)} time worst-case
  * complexity, hence {@code attribute::set(null)} is to be preferred to {@code remove}.
  */
+
+// DefaultAttributeMap 与 JDK Map有什么不同，为什么还要重新设计一个Map呢
+// 在大量连接数下，ConcurrentHashMap显得非常吃内存
+// 优点：代码少、简单、内存占用相对较小
+
 public class DefaultAttributeMap implements AttributeMap {
 
     // 利用原子更新特性 DefaultAttributeMap类中 字段类型DefaultAttribute[]， 字段名称为attributes
@@ -167,7 +172,7 @@ public class DefaultAttributeMap implements AttributeMap {
             final int newCount = count - 1;
             final DefaultAttribute[] newAttributes =
                     newCount == 0? EMPTY_ATTRIBUTES : new DefaultAttribute[newCount];
-            // perform 2 bulk copies
+            // perform 2 bulk copies  执行2个批量复制
             System.arraycopy(attributes, 0, newAttributes, 0, index);
             final int remaining = count - index - 1;
             if (remaining > 0) {

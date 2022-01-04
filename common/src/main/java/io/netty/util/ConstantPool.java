@@ -42,6 +42,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
     /**
      * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
+    // 根椐Class 和 String 名称获取或生成返回常量
     public T valueOf(Class<?> firstNameComponent, String secondNameComponent) {
         return valueOf(
                 checkNotNull(firstNameComponent, "firstNameComponent").getName() +
