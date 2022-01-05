@@ -42,6 +42,7 @@ public class DefaultAttributeMapTest {
 
     @Test
     public void testGetSetString() {
+        // 创建一个key为Nothing的 AttributeKey类型
         AttributeKey<String> key = AttributeKey.valueOf("Nothing");
         Attribute<String> one = map.attr(key);
 

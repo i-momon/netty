@@ -50,6 +50,7 @@ public class DefaultAttributeMap implements AttributeMap {
         int high = sortedAttributes.length - 1;
 
         while (low <= high) {
+            // >>> 是无符号右移
             int mid = low + high >>> 1;
             DefaultAttribute midVal = sortedAttributes[mid];
             AttributeKey midValKey = midVal.key;
