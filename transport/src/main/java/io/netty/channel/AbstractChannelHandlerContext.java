@@ -69,19 +69,24 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     /**
      * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} is about to be called.
+     * ChannelHandler#handlerAdded(ChannelHandlerContext 即将被调用
      */
     private static final int ADD_PENDING = 1;
     /**
      * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} was called.
+     * ChannelHandler#handlerAdded(ChannelHandlerContext) 被调用
      */
     private static final int ADD_COMPLETE = 2;
     /**
      * {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
+     * ChannelHandler#handlerRemoved(CHannelHandlerContext) 被调用
      */
     private static final int REMOVE_COMPLETE = 3;
     /**
      * Neither {@link ChannelHandler#handlerAdded(ChannelHandlerContext)}
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
+     *
+     * ChannelHandler#handlerAdded(ChannelHandlerContext)   和  ChannelHandler#handlerRemoved(ChannelHandlerContext) 两个都没有调用
      */
     private static final int INIT = 0;
 
@@ -92,13 +97,16 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     // Will be set to null if no child executor should be used, otherwise it will be set to the
     // child executor.
+    // 如果不应使用子执行器，则设置为null。否则将设置为子执行器
     final EventExecutor executor;
     private ChannelFuture succeededFuture;
 
     // Lazily instantiated tasks used to trigger events to a handler with different executor.
+    // 实例任务用于将事件触发到具有不同执行器的廷迟实例化任务
     // There is no need to make this volatile as at worse it will just create a few more instances then needed.
     private Tasks invokeTasks;
 
+    // handler状态
     private volatile int handlerState = INIT;
 
     AbstractChannelHandlerContext(DefaultChannelPipeline pipeline, EventExecutor executor,
@@ -108,6 +116,8 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         this.executor = executor;
         this.executionMask = mask(handlerClass);
         // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
+        // 它由EventLoop驱动或给定的Executor是OrderedEventExecutor实例
+        // 如果exxcutor为null 或者 executor是OrderedEventExecutor实例，则orderd为true
         ordered = executor == null || executor instanceof OrderedEventExecutor;
     }
 
@@ -894,6 +904,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private static boolean skipContext(
             AbstractChannelHandlerContext ctx, EventExecutor currentExecutor, int mask, int onlyMask) {
         // Ensure we correctly handle MASK_EXCEPTION_CAUGHT which is not included in the MASK_EXCEPTION_CAUGHT
+        //
         return (ctx.executionMask & (onlyMask | mask)) == 0 ||
                 // We can only skip if the EventExecutor is the same as otherwise we need to ensure we offload
                 // everything to preserve ordering.

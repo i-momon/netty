@@ -36,23 +36,24 @@ final class ChannelHandlerMask {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ChannelHandlerMask.class);
 
     // Using to mask which methods must be called for a ChannelHandler.
-    static final int MASK_EXCEPTION_CAUGHT = 1;
-    static final int MASK_CHANNEL_REGISTERED = 1 << 1;
-    static final int MASK_CHANNEL_UNREGISTERED = 1 << 2;
-    static final int MASK_CHANNEL_ACTIVE = 1 << 3;
-    static final int MASK_CHANNEL_INACTIVE = 1 << 4;
-    static final int MASK_CHANNEL_READ = 1 << 5;
-    static final int MASK_CHANNEL_READ_COMPLETE = 1 << 6;
-    static final int MASK_USER_EVENT_TRIGGERED = 1 << 7;
-    static final int MASK_CHANNEL_WRITABILITY_CHANGED = 1 << 8;
-    static final int MASK_BIND = 1 << 9;
-    static final int MASK_CONNECT = 1 << 10;
-    static final int MASK_DISCONNECT = 1 << 11;
-    static final int MASK_CLOSE = 1 << 12;
-    static final int MASK_DEREGISTER = 1 << 13;
-    static final int MASK_READ = 1 << 14;
-    static final int MASK_WRITE = 1 << 15;
-    static final int MASK_FLUSH = 1 << 16;
+
+    static final int MASK_EXCEPTION_CAUGHT = 1; // 异常
+    static final int MASK_CHANNEL_REGISTERED = 1 << 1; // Channel 注册
+    static final int MASK_CHANNEL_UNREGISTERED = 1 << 2; // Channel注销
+    static final int MASK_CHANNEL_ACTIVE = 1 << 3; // Channel 活跃
+    static final int MASK_CHANNEL_INACTIVE = 1 << 4; // Channel 非活跃
+    static final int MASK_CHANNEL_READ = 1 << 5; // Channel 读
+    static final int MASK_CHANNEL_READ_COMPLETE = 1 << 6; // Channel 读完成
+    static final int MASK_USER_EVENT_TRIGGERED = 1 << 7; // 用户事件触发器
+    static final int MASK_CHANNEL_WRITABILITY_CHANGED = 1 << 8; // Channel 可写性已更改
+    static final int MASK_BIND = 1 << 9; // 绑定
+    static final int MASK_CONNECT = 1 << 10; // 连接
+    static final int MASK_DISCONNECT = 1 << 11; // 断开连接
+    static final int MASK_CLOSE = 1 << 12; // 关闭
+    static final int MASK_DEREGISTER = 1 << 13; // 注销
+    static final int MASK_READ = 1 << 14; // 读取
+    static final int MASK_WRITE = 1 << 15; // 写入
+    static final int MASK_FLUSH = 1 << 16; // 刷新
 
     static final int MASK_ONLY_INBOUND =  MASK_CHANNEL_REGISTERED |
             MASK_CHANNEL_UNREGISTERED | MASK_CHANNEL_ACTIVE | MASK_CHANNEL_INACTIVE | MASK_CHANNEL_READ |
@@ -72,6 +73,9 @@ final class ChannelHandlerMask {
 
     /**
      * Return the {@code executionMask}.
+     * 返回executionMask
+     * 先尝试从cache获取掩码
+     * 如果失败 计算它将其放入cahce更将来快速查找
      */
     static int mask(Class<? extends ChannelHandler> clazz) {
         // Try to obtain the mask from the cache first. If this fails calculate it and put it in the cache for fast
@@ -87,13 +91,16 @@ final class ChannelHandlerMask {
 
     /**
      * Calculate the {@code executionMask}.
+     * 计算 executionMask值
      */
     private static int mask0(Class<? extends ChannelHandler> handlerType) {
         int mask = MASK_EXCEPTION_CAUGHT;
         try {
+            // 如果handlerType是ChannelInboundHandler类型
             if (ChannelInboundHandler.class.isAssignableFrom(handlerType)) {
                 mask |= MASK_ALL_INBOUND;
 
+                // isSkippable 可跳过。 如果isSkippable返回true，则表示不是这个类型MASK_CHANNEL_REGISTERED
                 if (isSkippable(handlerType, "channelRegistered", ChannelHandlerContext.class)) {
                     mask &= ~MASK_CHANNEL_REGISTERED;
                 }
