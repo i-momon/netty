@@ -61,8 +61,8 @@ import static io.netty.channel.ChannelHandlerMask.mask;
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
-    volatile AbstractChannelHandlerContext next;
-    volatile AbstractChannelHandlerContext prev;
+    volatile AbstractChannelHandlerContext next;  // 存储inbound
+    volatile AbstractChannelHandlerContext prev;  // 存储outbound
 
     private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(AbstractChannelHandlerContext.class, "handlerState");
@@ -102,7 +102,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private ChannelFuture succeededFuture;
 
     // Lazily instantiated tasks used to trigger events to a handler with different executor.
-    // 实例任务用于将事件触发到具有不同执行器的廷迟实例化任务
+    // [实例任务用于将事件触发到具有不同执行器的廷迟实例化任务]
     // There is no need to make this volatile as at worse it will just create a few more instances then needed.
     private Tasks invokeTasks;
 
@@ -114,6 +114,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         this.name = ObjectUtil.checkNotNull(name, "name");
         this.pipeline = pipeline;
         this.executor = executor;
+        // 计算AbstractChannelHandlerContext的 executionMask值，这个在
         this.executionMask = mask(handlerClass);
         // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
         // 它由EventLoop驱动或给定的Executor是OrderedEventExecutor实例
@@ -369,6 +370,8 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     }
 
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
+        // touch是干什么用的
+        // 维护引用计数，主要是为了侦测资源泄漏问题 ？？？ 这句话在网上看的没有深入研究是什么意思
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
@@ -495,6 +498,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             return promise;
         }
 
+        // 找到MASK_BIND的一下 AbstractChannelHandlerContext
         final AbstractChannelHandlerContext next = findContextOutbound(MASK_BIND);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
@@ -568,7 +572,9 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     public ChannelFuture disconnect(final ChannelPromise promise) {
         if (!channel().metadata().hasDisconnect()) {
             // Translate disconnect to close if the channel has no notion of disconnect-reconnect.
+            // 如果通道没有断开重连的概念，则断开连接转换为关闭
             // So far, UDP/IP is the only transport that has such behavior.
+            // 到目前为zhi，UDP/IP是唯一具有这种行为的传输
             return close(promise);
         }
         if (isNotValidPromise(promise, false)) {
@@ -791,8 +797,12 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             throw e;
         }
 
+        // flush 为true  => 写入和刷新事件
+        // flush 为false => 写入事件
+        // 找到匹配的AbstractChannelHandlerContext实例
         final AbstractChannelHandlerContext next = findContextOutbound(flush ?
                 (MASK_WRITE | MASK_FLUSH) : MASK_WRITE);
+
         final Object m = pipeline.touch(msg, next);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
@@ -883,20 +893,32 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return false;
     }
 
+    /**
+     * 找到下一个inbound节点
+     * @param mask
+     * @return
+     */
     private AbstractChannelHandlerContext findContextInbound(int mask) {
         AbstractChannelHandlerContext ctx = this;
         EventExecutor currentExecutor = executor();
         do {
             ctx = ctx.next;
+            // 找到Inbound链表的最后一个ctx
         } while (skipContext(ctx, currentExecutor, mask, MASK_ONLY_INBOUND));
         return ctx;
     }
 
+    /**
+     * 找到上一个outbound节点
+     * @param mask
+     * @return
+     */
     private AbstractChannelHandlerContext findContextOutbound(int mask) {
         AbstractChannelHandlerContext ctx = this;
         EventExecutor currentExecutor = executor();
         do {
             ctx = ctx.prev;
+            // 找到outbound链表的最前面的ctx
         } while (skipContext(ctx, currentExecutor, mask, MASK_ONLY_OUTBOUND));
         return ctx;
     }
@@ -904,7 +926,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private static boolean skipContext(
             AbstractChannelHandlerContext ctx, EventExecutor currentExecutor, int mask, int onlyMask) {
         // Ensure we correctly handle MASK_EXCEPTION_CAUGHT which is not included in the MASK_EXCEPTION_CAUGHT
-        //
+        // 这句话的意思是execuionMask的事件类型与 传进来的不一样  或 当前线程等于currentExecutor且当前的execution
         return (ctx.executionMask & (onlyMask | mask)) == 0 ||
                 // We can only skip if the EventExecutor is the same as otherwise we need to ensure we offload
                 // everything to preserve ordering.
@@ -966,13 +988,20 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      * Makes best possible effort to detect if {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} was called
      * yet. If not return {@code false} and if called or could not detect return {@code true}.
      *
+     * 尽最大努力检测是否调用了 ChannelHandler#handlerAdded(ChannelHandlerContext)，如果不返回false或者不能检测 则返回true
+     *
      * If this method returns {@code false} we will not invoke the {@link ChannelHandler} but just forward the event.
+     * 如果这个方法返回false， 将不能执行ChannelHandler但只是转发事件
      * This is needed as {@link DefaultChannelPipeline} may already put the {@link ChannelHandler} in the linked-list
      * but not called {@link ChannelHandler#handlerAdded(ChannelHandlerContext)}.
+     *
+     * DefaultChannelPipeline可能已经将 ChannelHandler放入链表，但未调用handlerAdded
      */
     private boolean invokeHandler() {
         // Store in local variable to reduce volatile reads.
+        // 存储在局部变量中，减少易失性读取
         int handlerState = this.handlerState;
+        // 如果handlerState为添加完成  或  ordered为false并且handlerState 为ADD_PENDING
         return handlerState == ADD_COMPLETE || (!ordered && handlerState == ADD_PENDING);
     }
 

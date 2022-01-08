@@ -110,6 +110,9 @@ public final class ReferenceCountUtil {
      * Unlike {@link #release(Object)} this method catches an exception raised by {@link ReferenceCounted#release()}
      * and logs it, rather than rethrowing it to the caller.  It is usually recommended to use {@link #release(Object)}
      * instead, unless you absolutely need to swallow an exception.
+     *
+     * 与Release(Object msg)不同的是，safeRelease(Object msg)方法可以捕获由ReferenceCount#release()引发的异常记录下来，
+     * 而不是将其抛给调用者，通常建议用 ReferenceCountedUtil#release(Object)代替，除非您能绝对需要吞下异常
      */
     public static void safeRelease(Object msg) {
         try {
@@ -125,6 +128,8 @@ public final class ReferenceCountUtil {
      * Unlike {@link #release(Object)} this method catches an exception raised by {@link ReferenceCounted#release(int)}
      * and logs it, rather than rethrowing it to the caller.  It is usually recommended to use
      * {@link #release(Object, int)} instead, unless you absolutely need to swallow an exception.
+     *
+     * 与safeRelease(Object msg) 相似
      */
     public static void safeRelease(Object msg, int decrement) {
         try {
@@ -141,6 +146,8 @@ public final class ReferenceCountUtil {
      * Schedules the specified object to be released when the caller thread terminates. Note that this operation is
      * intended to simplify reference counting of ephemeral objects during unit tests. Do not use it beyond the
      * intended use case.
+     *
+     * 调度指定对象在调用者线程终止时释放。请注意，此操作指在简化单元测试期间临时对象的引用计数
      *
      * @deprecated this may introduce a lot of memory usage so it is generally preferable to manually release objects.
      */
@@ -168,6 +175,7 @@ public final class ReferenceCountUtil {
     /**
      * Returns reference count of a {@link ReferenceCounted} object. If object is not type of
      * {@link ReferenceCounted}, {@code -1} is returned.
+     * 返回引用计数，如果不是ReferenceCounted的对则返回-1
      */
     public static int refCnt(Object msg) {
         return msg instanceof ReferenceCounted ? ((ReferenceCounted) msg).refCnt() : -1;

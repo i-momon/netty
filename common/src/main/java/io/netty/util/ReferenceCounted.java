@@ -17,6 +17,7 @@ package io.netty.util;
 
 /**
  * A reference-counted object that requires explicit deallocation.
+ * 需要显式释放的引用计数对象
  * <p>
  * When a new {@link ReferenceCounted} is instantiated, it starts with the reference count of {@code 1}.
  * {@link #retain()} increases the reference count, and {@link #release()} decreases the reference count.
@@ -49,6 +50,8 @@ public interface ReferenceCounted {
      * Records the current access location of this object for debugging purposes.
      * If this object is determined to be leaked, the information recorded by this operation will be provided to you
      * via {@link ResourceLeakDetector}.  This method is a shortcut to {@link #touch(Object) touch(null)}.
+     *
+     * 返回当前对象访问的位置 主要是调试。如果这个对象已经泄露，此操作记录的信息将通过ResourceLeakDetector提供给您
      */
     ReferenceCounted touch();
 
@@ -56,14 +59,18 @@ public interface ReferenceCounted {
      * Records the current access location of this object with an additional arbitrary information for debugging
      * purposes.  If this object is determined to be leaked, the information recorded by this operation will be
      * provided to you via {@link ResourceLeakDetector}.
+     * 记录此对象的当前访问位置以及用于调试的附加任意信息的目的，如果该对象被定为泄漏。该操作的信息通过ResourceLeakDetector提供给您
      */
     ReferenceCounted touch(Object hint);
 
     /**
      * Decreases the reference count by {@code 1} and deallocates this object if the reference count reaches at
      * {@code 0}.
+     * 将引用计数减少1 并且引用计数达到0时释放此对象
      *
      * @return {@code true} if and only if the reference count became {@code 0} and this object has been deallocated
+     *
+     * 当且仅当引用计数变为0时，释放该对象
      */
     boolean release();
 
@@ -72,6 +79,8 @@ public interface ReferenceCounted {
      * count reaches at {@code 0}.
      *
      * @return {@code true} if and only if the reference count became {@code 0} and this object has been deallocated
+     *
+     * 与release用法相同
      */
     boolean release(int decrement);
 }

@@ -46,7 +46,7 @@ final class ChannelHandlerMask {
     static final int MASK_CHANNEL_READ = 1 << 5; // Channel 读
     static final int MASK_CHANNEL_READ_COMPLETE = 1 << 6; // Channel 读完成
     static final int MASK_USER_EVENT_TRIGGERED = 1 << 7; // 用户事件触发器
-    static final int MASK_CHANNEL_WRITABILITY_CHANGED = 1 << 8; // Channel 可写性已更改
+    static final int MASK_CHANNEL_WRITABILITY_CHANGED = 1 << 8; // Channel 可写性已更改（写状态的变化事件）
     static final int MASK_BIND = 1 << 9; // 绑定
     static final int MASK_CONNECT = 1 << 10; // 连接
     static final int MASK_DISCONNECT = 1 << 11; // 断开连接
