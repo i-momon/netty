@@ -32,6 +32,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+// 主要职责是计算ChannelHandler的ChannelHandlerContext中的 executorMask值
 final class ChannelHandlerMask {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ChannelHandlerMask.class);
 
@@ -91,7 +92,10 @@ final class ChannelHandlerMask {
 
     /**
      * Calculate the {@code executionMask}.
-     * 计算 executionMask值
+     * 计算 executionMask值，逻辑是默认拥有所有的入站事件和出站事件 MASK_ALL_INBOUND AND MASK_ALL_OUTBOUND
+     * 判断handlerType是 in  or out 分别对两者进行搜索
+     * 如果在类中没有找到对应的事件标识方法，就会返回exception_caught
+     *
      */
     private static int mask0(Class<? extends ChannelHandler> handlerType) {
         int mask = MASK_EXCEPTION_CAUGHT;
@@ -101,6 +105,7 @@ final class ChannelHandlerMask {
                 mask |= MASK_ALL_INBOUND;
 
                 // isSkippable 可跳过。 如果isSkippable返回true，则表示不是这个类型MASK_CHANNEL_REGISTERED
+                // 这里的意思大概是在handlerType对象中 找methodName方法，这个方法的参数是ChannelHandlerContext.class
                 if (isSkippable(handlerType, "channelRegistered", ChannelHandlerContext.class)) {
                     mask &= ~MASK_CHANNEL_REGISTERED;
                 }
