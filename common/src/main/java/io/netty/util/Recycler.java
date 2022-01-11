@@ -35,8 +35,9 @@ import static java.lang.Math.min;
 
 /**
  * Light-weight object pool based on a thread-local stack.
+ * 基于线程局部栈的轻量级线程池
  *
- * @param <T> the type of the pooled object
+ * @param <T> the type of the pooled object 需要池化的的对象类型
  */
 public abstract class Recycler<T> {
 
@@ -49,23 +50,36 @@ public abstract class Recycler<T> {
             // NOOP
         }
     };
+    // id 生成器
     private static final AtomicInteger ID_GENERATOR = new AtomicInteger(Integer.MIN_VALUE);
+    // 获取旧值设置个新值
     private static final int OWN_THREAD_ID = ID_GENERATOR.getAndIncrement();
+    // 每个线程的默认最大容量值
     private static final int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
+    // 每个线程的最大容量
     private static final int DEFAULT_MAX_CAPACITY_PER_THREAD;
+    // 初始化容量
     private static final int INITIAL_CAPACITY;
+    // 最大共享容量
     private static final int MAX_SHARED_CAPACITY_FACTOR;
+    // 每个线程最大的廷迟队列
     private static final int MAX_DELAYED_QUEUES_PER_THREAD;
+    // 链接容量
     private static final int LINK_CAPACITY;
+    // 比率
     private static final int RATIO;
+    // 廷迟排队率
     private static final int DELAYED_QUEUE_RATIO;
 
     static {
         // In the future, we might have different maxCapacity for different object types.
+        // 可能对不同的对象有不同的maxCapacity
         // e.g. io.netty.recycler.maxCapacity.writeTask
         //      io.netty.recycler.maxCapacity.outboundBuffer
         int maxCapacityPerThread = SystemPropertyUtil.getInt("io.netty.recycler.maxCapacityPerThread",
                 SystemPropertyUtil.getInt("io.netty.recycler.maxCapacity", DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD));
+
+        // 如果每个线程最大容量 < 0则使用默认值
         if (maxCapacityPerThread < 0) {
             maxCapacityPerThread = DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD;
         }
