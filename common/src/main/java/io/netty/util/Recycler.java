@@ -316,7 +316,6 @@ public abstract class Recycler<T> {
             // 可用的共享容量
             private final AtomicInteger availableSharedCapacity;
 
-            // Link 类，这里面好像是个列表
             Link link;
 
             Head(AtomicInteger availableSharedCapacity) {
@@ -610,6 +609,7 @@ public abstract class Recycler<T> {
             this.parent = parent;
             threadRef = new WeakReference<Thread>(thread);
             this.maxCapacity = maxCapacity;
+
             availableSharedCapacity = new AtomicInteger(max(maxCapacity / maxSharedCapacityFactor, LINK_CAPACITY));
             elements = new DefaultHandle[min(INITIAL_CAPACITY, maxCapacity)];
             this.interval = interval;
@@ -790,10 +790,13 @@ public abstract class Recycler<T> {
             // we don't want to have a ref to the queue as the value in our weak map
             // so we null it out; to ensure there are no races with restoring it later
             // we impose a memory ordering here (no-op on x86)
-            // 我们不想将队列的引用作为弱映射中的值，因此我们将其设为空
+            // 从DELAYED_RECYCLED中获取一个Map<<Stack<?>, WeakOrderQueue>类型的队列 delayedRecycled
             Map<Stack<?>, WeakOrderQueue> delayedRecycled = DELAYED_RECYCLED.get();
+
+            // 这个this 该怎么理解呢。这里的意思是创建stack的对象
             WeakOrderQueue queue = delayedRecycled.get(this);
             if (queue == null) {
+                // 这里的意思是回收队列数量 大于等于最大的廷迟队列数量最大值，就放到 WeakOrderQueue.DUMMY
                 if (delayedRecycled.size() >= maxDelayedQueues) {
                     // Add a dummy queue so we know we should drop the object
                     // 添加一个虚拟列队，以便我知道应该删除该对象
@@ -801,11 +804,12 @@ public abstract class Recycler<T> {
                     return;
                 }
                 // Check if we already reached the maximum number of delayed queues and if we can allocate at all.
-                // 检查我们是否已经达到廷队队列的最大数量以及我们是否分配
+                // 检查我们是否已经达到廷迟队列的最大数量，如果不能分配则丢弃对象
                 if ((queue = newWeakOrderQueue(thread)) == null) {
                     // drop object
                     return;
                 }
+                // 将对象推入队列
                 delayedRecycled.put(this, queue);
             } else if (queue == WeakOrderQueue.DUMMY) {
                 // drop object
