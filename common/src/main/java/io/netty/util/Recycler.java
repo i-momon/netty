@@ -472,8 +472,9 @@ public abstract class Recycler<T> {
 
             Link tail = this.tail;
             int writeIndex;
-            // 如果写索引与LINK_CAPACITY相等，这个需要扩容了吧？
+            // 如果写索引值与LINK_CAPACITY相等，表示需要创建Link了
             // 这里获取了新的Link对象，由于Link对象实现了AtomicInteger可以获取到自增ID
+            // tail.get()表示获取当前是Link中已经填充元素的个数，如果等于16说明元素已经填充满
             if ((writeIndex = tail.get()) == LINK_CAPACITY) {
                 Link link = head.newLink();
                 if (link == null) {
@@ -481,16 +482,18 @@ public abstract class Recycler<T> {
                     return;
                 }
                 // We allocate a Link so reserve the space
-                // 我们分配一个Link 保留空间
+                // 将尾节点指向新创建的Link，并且原来尾节点的next的节点指向新创建的Link
                 this.tail = tail = tail.next = link;
-
+                // 获取新Link的写入索引位置，由于是新创建的Link所有索引位置返回的是0
                 writeIndex = tail.get();
             }
             // 根椐上面获取的索引writeIndex 与 将Handle赋值到对应位置
             tail.elements[writeIndex] = handle;
+            // 将handle的stack属性设置为null, 表示当前handle不是通过stack进行回收的
             handle.stack = null;
             // we lazy set to ensure that setting stack to null appears before we unnull it in the owning thread;
             // this also means we guarantee visibility of an element in the queue if we see the index updated
+            // 维护一下一次写入的位置
             tail.lazySet(writeIndex + 1);
         }
 
