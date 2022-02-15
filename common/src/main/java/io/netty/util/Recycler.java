@@ -530,26 +530,31 @@ public abstract class Recycler<T> {
             final int dstSize = dst.size;
             // 预期容量
             final int expectedCapacity = dstSize + srcSize;
-
+            // 如果stack的大小加上需要迁移的大小，大于stack 元素的数量
             if (expectedCapacity > dst.elements.length) {
-                // Stack 增加容量
+                // Stack 增加容量按容量两倍扩容，actualCapacity 扩容后的容量值
                 final int actualCapacity = dst.increaseCapacity(expectedCapacity);
-                // actualCapacity 实际容量
+                // 开始迁移的位置值（可读索引） + 扩容后的容量值 - stack元素大小 ，
+                // 这里可以分两步理解  扩容后的容量值 - stack元素的大小 = 这个stack还能承接多少DefaultHandle
+                // 读索引加值 + stack还能承接多少DefaultHandle = 需要迁移的DefaultHandle数量在stack的最后一个位置
+                // srcEnd还需要参与后面的范围计算，所以得保证srcEnd的大小 小于Link中的srcEnd
                 srcEnd = min(srcStart + actualCapacity - dstSize, srcEnd);
             }
 
             if (srcStart != srcEnd) {
                 final DefaultHandle[] srcElems = head.elements;
                 final DefaultHandle[] dstElems = dst.elements;
+                // newDstSize 表示初始化stack的下标，表示stack中从这个下标开始添加数据
                 int newDstSize = dstSize;
                 for (int i = srcStart; i < srcEnd; i++) {
                     DefaultHandle<?> element = srcElems[i];
-                    // 如果回收ID为0
+                    // 如果recycleId 为表示没有回收过，然后给recycleId 赋值来区分对象有没有回收过
                     if (element.recycleId == 0) {
                         element.recycleId = element.lastRecycledId;
-                    } else if (element.recycleId != element.lastRecycledId) {
+                    } else if (element.recycleId != element.lastRecycledId) { // element回收过，但回收的ID与最后一次回收的ID不一致，表示一个对象在不同的地方被回收过
                         throw new IllegalStateException("recycled already");
                     }
+                    // 将第i个元素列为null
                     srcElems[i] = null;
 
                     // 回收将Handle设置为true就算是丢弃
@@ -557,6 +562,7 @@ public abstract class Recycler<T> {
                         // Drop the object.
                         continue;
                     }
+                    // 将handle的属性stack 设置到当前stack
                     element.stack = dst;
                     dstElems[newDstSize ++] = element;
                 }
@@ -566,6 +572,7 @@ public abstract class Recycler<T> {
                     this.head.relink(head.next);
                 }
 
+                // 重置readIndex位置，srcEnd表示下一次读取的位置
                 head.readIndex = srcEnd;
                 if (dst.size == newDstSize) {
                     return false;
@@ -574,7 +581,7 @@ public abstract class Recycler<T> {
                 return true;
             } else {
                 // The destination stack is full already.
-                // destination 目标栈已满
+                // stack 是满的
                 return false;
             }
         }
