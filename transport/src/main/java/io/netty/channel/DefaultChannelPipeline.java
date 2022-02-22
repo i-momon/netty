@@ -47,7 +47,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultChannelPipeline.class);
 
+    // HeadContext.class 类名 + "#0" => "HeadContext#0"
     private static final String HEAD_NAME = generateName0(HeadContext.class);
+    // 与HEAD_NAME类似 => "TailContext#0"
     private static final String TAIL_NAME = generateName0(TailContext.class);
 
     private static final FastThreadLocal<Map<Class<?>, String>> nameCaches =
@@ -61,6 +63,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
             AtomicReferenceFieldUpdater.newUpdater(
                     DefaultChannelPipeline.class, MessageSizeEstimator.Handle.class, "estimatorHandle");
+
     final AbstractChannelHandlerContext head;
     final AbstractChannelHandlerContext tail;
 
@@ -76,10 +79,14 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     /**
      * This is the head of a linked list that is processed by {@link #callHandlerAddedForAllHandlers()} and so process
      * all the pending {@link #callHandlerAdded0(AbstractChannelHandlerContext)}.
+     * 这是由callHandlerAddedForAllHandlers处理的链表的头部，处理所有pending中的AbstractChannelHandlerContext
      *
      * We only keep the head because it is expected that the list is used infrequently and its size is small.
+     * 我们只保留头部是因为预计列表不经常使用，并且它的大小很小
      * Thus full iterations to do insertions is assumed to be a good compromised to saving memory and tail management
      * complexity.
+     * 节省内存和尾部管理复杂性的一个很好的折中方案
+     *
      */
     private PendingHandlerCallback pendingHandlerCallbackHead;
 
@@ -94,6 +101,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         succeededFuture = new SucceededChannelFuture(channel, null);
         voidPromise =  new VoidChannelPromise(channel, true);
 
+        // 初始化了一个双链接链表
         tail = new TailContext(this);
         head = new HeadContext(this);
 
@@ -101,10 +109,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         tail.prev = head;
     }
 
+    // 负责估计预计消息大小的Handle
     final MessageSizeEstimator.Handle estimatorHandle() {
         MessageSizeEstimator.Handle handle = estimatorHandle;
         if (handle == null) {
             handle = channel.config().getMessageSizeEstimator().newHandle();
+            // 判断ESTIMATOR是否为null，如果是的话将 estimatorHandle返回
             if (!ESTIMATOR.compareAndSet(this, null, handle)) {
                 handle = estimatorHandle;
             }
@@ -1302,6 +1312,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //
     final class HeadContext extends AbstractChannelHandlerContext
             implements ChannelOutboundHandler, ChannelInboundHandler {
 

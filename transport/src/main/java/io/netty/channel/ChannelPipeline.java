@@ -42,6 +42,7 @@ import java.util.NoSuchElementException;
  *
  * <h3>How an event flows in a pipeline</h3>
  *
+ * 下图描述了ChannelPipeline中的ChannelHandler是如何处理I/O事件
  * The following diagram describes how I/O events are processed by {@link ChannelHandler}s in a {@link ChannelPipeline}
  * typically. An I/O event is handled by either a {@link ChannelInboundHandler} or a {@link ChannelOutboundHandler}
  * and be forwarded to its closest handler by calling the event propagation methods defined in

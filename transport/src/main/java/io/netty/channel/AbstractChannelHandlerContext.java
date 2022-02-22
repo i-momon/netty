@@ -74,12 +74,12 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private static final int ADD_PENDING = 1;
     /**
      * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} was called.
-     * ChannelHandler#handlerAdded(ChannelHandlerContext) 被调用
+     * ChannelHandler#handlerAdded(ChannelHandlerContext) 已经被调用
      */
     private static final int ADD_COMPLETE = 2;
     /**
      * {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
-     * ChannelHandler#handlerRemoved(CHannelHandlerContext) 被调用
+     * ChannelHandler#handlerRemoved(CHannelHandlerContext) 已经被调用
      */
     private static final int REMOVE_COMPLETE = 3;
     /**
@@ -1052,6 +1052,8 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     }
 
     static final class WriteTask implements Runnable {
+        // 这里定了一个静态常量  RECYCLER 它是一个ObjectPool<WriteTask>类型
+        // 这个是ObjectPool是一个对象池，池中的对象是WriteTask
         private static final ObjectPool<WriteTask> RECYCLER = ObjectPool.newPool(new ObjectCreator<WriteTask>() {
             @Override
             public WriteTask newObject(Handle<WriteTask> handle) {
@@ -1065,6 +1067,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             init(task, ctx, msg, promise, flush);
             return task;
         }
+
 
         private static final boolean ESTIMATE_TASK_SIZE_ON_SUBMIT =
                 SystemPropertyUtil.getBoolean("io.netty.transport.estimateSizeOnSubmit", true);
@@ -1123,6 +1126,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             }
         }
 
+        // 减少待出站的字节数
         private void decrementPendingOutboundBytes() {
             if (ESTIMATE_TASK_SIZE_ON_SUBMIT) {
                 ctx.pipeline.decrementPendingOutboundBytes(size & Integer.MAX_VALUE);
