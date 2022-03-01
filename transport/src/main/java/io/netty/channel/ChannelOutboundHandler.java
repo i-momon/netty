@@ -81,6 +81,9 @@ public interface ChannelOutboundHandler extends ChannelHandler {
      * {@link ChannelPipeline}. Those are then ready to be flushed to the actual {@link Channel} once
      * {@link Channel#flush()} is called
      *
+     * 进行写操作调用，写入操作将通过ChannelPipeline写入消息。
+     * 一旦调用flush()调用，这些就可以被刷到实际的Channel
+     *
      * @param ctx               the {@link ChannelHandlerContext} for which the write operation is made
      * @param msg               the message to write
      * @param promise           the {@link ChannelPromise} to notify once the operation completes

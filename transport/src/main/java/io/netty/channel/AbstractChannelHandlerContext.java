@@ -721,7 +721,9 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     }
 
     void invokeWrite(Object msg, ChannelPromise promise) {
+        // invokeHandler返回false 将不能执行ChannelHandler只是转发
         if (invokeHandler()) {
+            //
             invokeWrite0(msg, promise);
         } else {
             write(msg, promise);
@@ -730,6 +732,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     private void invokeWrite0(Object msg, ChannelPromise promise) {
         try {
+            // 调用出站Handler写入消息内容， AbstractChannelHandlerContext对象，消息msg，promise
             ((ChannelOutboundHandler) handler()).write(this, msg, promise);
         } catch (Throwable t) {
             notifyOutboundHandlerException(t, promise);
@@ -989,8 +992,8 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      * yet. If not return {@code false} and if called or could not detect return {@code true}.
      *
      * 尽最大努力检测是否调用了 ChannelHandler#handlerAdded(ChannelHandlerContext)，如果不返回false或者不能检测 则返回true
-     *
      * If this method returns {@code false} we will not invoke the {@link ChannelHandler} but just forward the event.
+     *
      * 如果这个方法返回false， 将不能执行ChannelHandler但只是转发事件
      * This is needed as {@link DefaultChannelPipeline} may already put the {@link ChannelHandler} in the linked-list
      * but not called {@link ChannelHandler#handlerAdded(ChannelHandlerContext)}.
@@ -1001,7 +1004,8 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         // Store in local variable to reduce volatile reads.
         // 存储在局部变量中，减少易失性读取
         int handlerState = this.handlerState;
-        // 如果handlerState为添加完成  或  ordered为false并且handlerState 为ADD_PENDING
+        // 如果handlerState为添加完成状态则返回true
+        // ordered为false并且handlerState为即将调用状态
         return handlerState == ADD_COMPLETE || (!ordered && handlerState == ADD_PENDING);
     }
 
@@ -1069,10 +1073,12 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
 
 
+        // 预估提交的任务大小
         private static final boolean ESTIMATE_TASK_SIZE_ON_SUBMIT =
                 SystemPropertyUtil.getBoolean("io.netty.transport.estimateSizeOnSubmit", true);
 
         // Assuming compressed oops, 12 bytes obj header, 4 ref fields and one int field
+        // 假设压缩oops，12个字节的obj头，4个ref字段和一个int字段
         private static final int WRITE_TASK_OVERHEAD =
                 SystemPropertyUtil.getInt("io.netty.transport.writeTaskSizeOverhead", 32);
 
@@ -1093,8 +1099,11 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
             task.msg = msg;
             task.promise = promise;
 
+            // 如果预估任务大小开启了就计算
             if (ESTIMATE_TASK_SIZE_ON_SUBMIT) {
+                // 当前msg大小 加上写入任务
                 task.size = ctx.pipeline.estimatorHandle().size(msg) + WRITE_TASK_OVERHEAD;
+                // 新增pipline的出站字节数
                 ctx.pipeline.incrementPendingOutboundBytes(task.size);
             } else {
                 task.size = 0;
@@ -1107,6 +1116,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         @Override
         public void run() {
             try {
+                // 减少减加的出站字节数
                 decrementPendingOutboundBytes();
                 if (size >= 0) {
                     ctx.invokeWrite(msg, promise);
