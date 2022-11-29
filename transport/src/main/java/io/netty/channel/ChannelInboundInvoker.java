@@ -25,6 +25,8 @@ public interface ChannelInboundInvoker {
      * called of the next  {@link ChannelInboundHandler} contained in the  {@link ChannelPipeline} of the
      * {@link Channel}.
      *
+     * 在Channel的ChannelPipeline中调用下一个ChannelInboundHandler的fireChannelRegistered方法()
+     *
      */
     ChannelInboundInvoker fireChannelRegistered();
 
@@ -35,6 +37,8 @@ public interface ChannelInboundInvoker {
      * This will result in having the  {@link ChannelInboundHandler#channelUnregistered(ChannelHandlerContext)} method
      * called of the next  {@link ChannelInboundHandler} contained in the  {@link ChannelPipeline} of the
      * {@link Channel}.
+     *
+     * 在Channel的ChannelPipeline中调用下一下Channel
      */
     ChannelInboundInvoker fireChannelUnregistered();
 

@@ -248,6 +248,16 @@ public abstract class AbstractByteBufAllocator implements ByteBufAllocator {
         return StringUtil.simpleClassName(this) + "(directByDefault: " + directByDefault + ')';
     }
 
+    /*
+        计算容量逻辑
+            1. 验证需要最小容量是否为0， 如果最小需要的容量大于最大容量，直接抛异常
+            2. 需要最小容量与阈值4MB相等，则直接返回4MB
+            3. 如果需要最小容量大于4MB，则计算 需要最小容量 - 4MB的差值. 如果这个值大于 最大容值 - 4MB的值，则扩容容量为 maxCapacity
+                                                                   如果这个值 小于最大容值 - 4MB的值，则扩容容量为 newCapacity += threshold。 这里是为什么呢
+            4. 新容量最小容量小于4MB，则取minNewCapacity和64的最大值，
+
+        注：为了防止内存被无限消耗，在扩容时做了一层保存
+    */
     @Override
     public int calculateNewCapacity(int minNewCapacity, int maxCapacity) {
         checkPositiveOrZero(minNewCapacity, "minNewCapacity");

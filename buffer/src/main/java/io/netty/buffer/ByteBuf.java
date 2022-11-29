@@ -1924,7 +1924,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * is basically same with {@link #writeBytes(ByteBuf, int, int)},
      * except that this method increases the {@code readerIndex} of the source
      * buffer by the number of the transferred bytes (= {@code length}) while
-     * {@link #writeBytes(ByteBuf, int, int)} does not.
+     * {@link #writeBytes(ByteBuf, int, int)} does not.public abstract ByteBuf writeMediumLE(int value);
      * If {@code this.writableBytes} is less than {@code length}, {@link #ensureWritable(int)}
      * will be called in an attempt to expand capacity to accommodate.
      *

@@ -33,6 +33,7 @@ import java.net.SocketAddress;
 
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
+// 嵌入式ChannelHandler上下文，这个类有什么作用呢？
 public abstract class EmbeddedChannelHandlerContext implements ChannelHandlerContext {
     private static final String HANDLER_NAME = "microbench-delegator-ctx";
     private final EventLoop eventLoop;
@@ -41,6 +42,7 @@ public abstract class EmbeddedChannelHandlerContext implements ChannelHandlerCon
     private final ChannelHandler handler;
     private SocketAddress localAddress;
 
+    // alloc 开辟字节buf、以及ChannelHandler操作、嵌入式的channel。
     protected EmbeddedChannelHandlerContext(ByteBufAllocator alloc, ChannelHandler handler, EmbeddedChannel channel) {
         this.alloc = checkNotNull(alloc, "alloc");
         this.channel = checkNotNull(channel, "channel");
@@ -115,12 +117,19 @@ public abstract class EmbeddedChannelHandlerContext implements ChannelHandlerCon
         return null;
     }
 
+    /**
+     * 触发用户定义的事件
+     * @param event
+     * @return
+     */
     @Override
     public final ChannelHandlerContext fireUserEventTriggered(Object event) {
+        // 释放事件
         ReferenceCountUtil.release(event);
         return this;
     }
 
+    // 这个作用是什么，仅仅是释放消息？
     @Override
     public final ChannelHandlerContext fireChannelRead(Object msg) {
         ReferenceCountUtil.release(msg);

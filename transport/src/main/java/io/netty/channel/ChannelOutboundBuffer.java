@@ -167,12 +167,19 @@ public final class ChannelOutboundBuffer {
         incrementPendingOutboundBytes(size, true);
     }
 
+    /**
+     *
+     * @param size
+     * @param invokeLater
+     */
     private void incrementPendingOutboundBytes(long size, boolean invokeLater) {
         if (size == 0) {
             return;
         }
 
+        // 更新等待处理的数据大小
         long newWriteBufferSize = TOTAL_PENDING_SIZE_UPDATER.addAndGet(this, size);
+        // 如果等待处理的数据大于高水位（默认64KB），设置标志位不可写
         if (newWriteBufferSize > channel.config().getWriteBufferHighWaterMark()) {
             setUnwritable(invokeLater);
         }
@@ -602,6 +609,7 @@ public final class ChannelOutboundBuffer {
         for (;;) {
             final int oldValue = unwritable;
             final int newValue = oldValue | 1;
+            // 尝试更新通道不可写，并触发fireChannelWritabilityChanged
             if (UNWRITABLE_UPDATER.compareAndSet(this, oldValue, newValue)) {
                 if (oldValue == 0) {
                     fireChannelWritabilityChanged(invokeLater);

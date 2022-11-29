@@ -135,6 +135,7 @@ public class ByteBufUtilTest {
         assertEquals(0, ByteBufUtil.indexOf(needle, haystack));
         haystack.readerIndex(2);
         needle.readerIndex(3);
+        System.out.println("Ok : " + ByteBufUtil.decodeString(needle, 3, 2, CharsetUtil.UTF_8));
         assertEquals(1, ByteBufUtil.indexOf(needle, haystack));
         haystack.readerIndex(1);
         needle.readerIndex(2);

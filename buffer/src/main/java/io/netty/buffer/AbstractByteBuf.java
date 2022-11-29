@@ -283,12 +283,17 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     final void ensureWritable0(int minWritableBytes) {
         final int writerIndex = writerIndex();
+        // 当前每入的索引位置 + 写入的字节数 = 目标容量
         final int targetCapacity = writerIndex + minWritableBytes;
         // using non-short-circuit & to reduce branching - this is a hot path and targetCapacity should rarely overflow
+        // 目标容易 大于0并且小于最大容易，表示可写
         if (targetCapacity >= 0 & targetCapacity <= capacity()) {
             ensureAccessible();
             return;
         }
+
+        // 需要验证溢出 并且 目标容量小于0（怎么会这种情况呢）或 目标容易大于最大容易。
+        // 这里是否可以理解固定大小的buffer，不支持动态扩容
         if (checkBounds && (targetCapacity < 0 || targetCapacity > maxCapacity)) {
             ensureAccessible();
             throw new IndexOutOfBoundsException(String.format(
@@ -297,7 +302,13 @@ public abstract class AbstractByteBuf extends ByteBuf {
         }
 
         // Normalize the target capacity to the power of 2.
+        // 返回在不涉及数据内容复制和扩容的情况下的最大可写入数量
         final int fastWritable = maxFastWritableBytes();
+        // 新容量计算逻辑：
+        // if (最大可写入数量 >= 最小写入字节数量)
+        //      可写入索引 + 最大可写入数量
+        // else
+        //      扩容逻辑
         int newCapacity = fastWritable >= minWritableBytes ? writerIndex + fastWritable
                 : alloc().calculateNewCapacity(targetCapacity, maxCapacity);
 
@@ -1068,6 +1079,13 @@ public abstract class AbstractByteBuf extends ByteBuf {
         return this;
     }
 
+    /**
+     * @param src
+     * @param srcIndex the first index of the source
+     * @param length   the number of bytes to transfer
+     *
+     * @return
+     */
     @Override
     public ByteBuf writeBytes(byte[] src, int srcIndex, int length) {
         ensureWritable(length);
@@ -1076,6 +1094,11 @@ public abstract class AbstractByteBuf extends ByteBuf {
         return this;
     }
 
+    /**
+     *
+     * @param src
+     * @return
+     */
     @Override
     public ByteBuf writeBytes(byte[] src) {
         writeBytes(src, 0, src.length);

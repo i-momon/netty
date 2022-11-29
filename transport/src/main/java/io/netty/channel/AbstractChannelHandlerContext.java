@@ -86,7 +86,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      * Neither {@link ChannelHandler#handlerAdded(ChannelHandlerContext)}
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      *
-     * ChannelHandler#handlerAdded(ChannelHandlerContext)   和  ChannelHandler#handlerRemoved(ChannelHandlerContext) 两个都没有调用
+     * ChannelHandler#handlerAdded(ChannelHandlerContext)   和  ChannelHandler#handlerRemoved(ChannelHandlerContext) 两个都没有调用，表示初始状态
      */
     private static final int INIT = 0;
 
@@ -448,6 +448,9 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    /**
+     * 修改channel的可写性
+     */
     private void invokeChannelWritabilityChanged() {
         if (invokeHandler()) {
             try {
@@ -526,6 +529,12 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    /**
+     * 连接给定的SocketAddress，返回ChannelFutrue
+     * @param remoteAddress
+     * @param promise
+     * @return
+     */
     @Override
     public ChannelFuture connect(SocketAddress remoteAddress, ChannelPromise promise) {
         return connect(remoteAddress, null, promise);
@@ -570,6 +579,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     @Override
     public ChannelFuture disconnect(final ChannelPromise promise) {
+
         if (!channel().metadata().hasDisconnect()) {
             // Translate disconnect to close if the channel has no notion of disconnect-reconnect.
             // 如果通道没有断开重连的概念，则断开连接转换为关闭
@@ -644,6 +654,11 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    /**
+     * 从之前分配的EventExecutor注销，并返回ChannelFutrue
+     * @param promise
+     * @return
+     */
     @Override
     public ChannelFuture deregister(final ChannelPromise promise) {
         if (isNotValidPromise(promise, false)) {
@@ -679,6 +694,10 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         }
     }
 
+    /**
+     * 将数据从Channel读取到第一个入站缓冲区；如果读取成功则触发一个ChannelRead事件，并通知ChannelInboundHandler的channelReadComplete方法
+     * @return
+     */
     @Override
     public ChannelHandlerContext read() {
         final AbstractChannelHandlerContext next = findContextOutbound(MASK_READ);
@@ -861,20 +880,23 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return new FailedChannelFuture(channel(), executor(), cause);
     }
 
+
     private boolean isNotValidPromise(ChannelPromise promise, boolean allowVoidPromise) {
         ObjectUtil.checkNotNull(promise, "promise");
 
+        //
         if (promise.isDone()) {
             // Check if the promise was cancelled and if so signal that the processing of the operation
             // should not be performed.
             //
             // See https://github.com/netty/netty/issues/2349
+            // 如果promise在完成前已取消
             if (promise.isCancelled()) {
                 return true;
             }
             throw new IllegalArgumentException("promise already done: " + promise);
         }
-
+        // promise.channel() 应与 当前AbstractChannelHandlerConext 所绑定的channel是一致的
         if (promise.channel() != channel()) {
             throw new IllegalArgumentException(String.format(
                     "promise.channel does not match: %s (expected: %s)", promise.channel(), channel()));
@@ -1024,9 +1046,20 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return channel().hasAttr(key);
     }
 
+    /**
+     * 如果是懒惰模式执行的话并且executor是AbstractEventExecutor
+     * 异常执行，引用计数释放msg变量，并且设置promise为失败状态
+     * @param executor 执行器
+     * @param runnable Runnable 任务
+     * @param promise ChannelPromise
+     * @param msg 消息
+     * @param lazy 是否懒惰
+     * @return
+     */
     private static boolean safeExecute(EventExecutor executor, Runnable runnable,
             ChannelPromise promise, Object msg, boolean lazy) {
         try {
+            // 如果是懒惰，并且executor是AbstractEventExecutor的对象
             if (lazy && executor instanceof AbstractEventExecutor) {
                 ((AbstractEventExecutor) executor).lazyExecute(runnable);
             } else {
@@ -1055,103 +1088,129 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return StringUtil.simpleClassName(ChannelHandlerContext.class) + '(' + name + ", " + channel() + ')';
     }
 
-    static final class WriteTask implements Runnable {
-        // 这里定了一个静态常量  RECYCLER 它是一个ObjectPool<WriteTask>类型
-        // 这个是ObjectPool是一个对象池，池中的对象是WriteTask
-        private static final ObjectPool<WriteTask> RECYCLER = ObjectPool.newPool(new ObjectCreator<WriteTask>() {
-            @Override
-            public WriteTask newObject(Handle<WriteTask> handle) {
-                return new WriteTask(handle);
-            }
-        });
-
-        static WriteTask newInstance(AbstractChannelHandlerContext ctx,
-                Object msg, ChannelPromise promise, boolean flush) {
-            WriteTask task = RECYCLER.get();
-            init(task, ctx, msg, promise, flush);
-            return task;
-        }
-
-
-        // 预估提交的任务大小
-        private static final boolean ESTIMATE_TASK_SIZE_ON_SUBMIT =
-                SystemPropertyUtil.getBoolean("io.netty.transport.estimateSizeOnSubmit", true);
-
-        // Assuming compressed oops, 12 bytes obj header, 4 ref fields and one int field
-        // 假设压缩oops，12个字节的obj头，4个ref字段和一个int字段
-        private static final int WRITE_TASK_OVERHEAD =
-                SystemPropertyUtil.getInt("io.netty.transport.writeTaskSizeOverhead", 32);
-
-        private final Handle<WriteTask> handle;
-        private AbstractChannelHandlerContext ctx;
-        private Object msg;
-        private ChannelPromise promise;
-        private int size; // sign bit controls flush
-
-        @SuppressWarnings("unchecked")
-        private WriteTask(Handle<? extends WriteTask> handle) {
-            this.handle = (Handle<WriteTask>) handle;
-        }
-
-        protected static void init(WriteTask task, AbstractChannelHandlerContext ctx,
-                                   Object msg, ChannelPromise promise, boolean flush) {
-            task.ctx = ctx;
-            task.msg = msg;
-            task.promise = promise;
-
-            // 如果预估任务大小开启了就计算
-            if (ESTIMATE_TASK_SIZE_ON_SUBMIT) {
-                // 当前msg大小 加上写入任务
-                task.size = ctx.pipeline.estimatorHandle().size(msg) + WRITE_TASK_OVERHEAD;
-                // 新增pipline的出站字节数
-                ctx.pipeline.incrementPendingOutboundBytes(task.size);
-            } else {
-                task.size = 0;
-            }
-            if (flush) {
-                task.size |= Integer.MIN_VALUE;
-            }
-        }
-
+    /**
+     * WriteTask
+     * 使用一个对象池 RECYCLER 来存储WriteTask对象
+     * 初始化WriteTask的变量
+     *             task.ctx = ctx;
+     *             task.msg = msg;
+     *             task.promise = promise;
+     *             task.size = size
+     *
+     * run()
+     *  减少等待的出站字数，执行wirte动作，完成后收回对象
+     *
+     *  cannel()
+     *  减少等待的出站字数
+     */
+static final class WriteTask implements Runnable {
+    // 这里定了一个静态常量  RECYCLER 它是一个ObjectPool<WriteTask>类型
+    // 这个是ObjectPool是一个对象池，池中的对象是WriteTask
+    private static final ObjectPool<WriteTask> RECYCLER = ObjectPool.newPool(new ObjectCreator<WriteTask>() {
         @Override
-        public void run() {
-            try {
-                // 减少减加的出站字节数
-                decrementPendingOutboundBytes();
-                if (size >= 0) {
-                    ctx.invokeWrite(msg, promise);
-                } else {
-                    ctx.invokeWriteAndFlush(msg, promise);
-                }
-            } finally {
-                recycle();
-            }
+        public WriteTask newObject(Handle<WriteTask> handle) {
+            return new WriteTask(handle);
         }
+    });
 
-        void cancel() {
-            try {
-                decrementPendingOutboundBytes();
-            } finally {
-                recycle();
-            }
+
+    static WriteTask newInstance(AbstractChannelHandlerContext ctx,
+            Object msg, ChannelPromise promise, boolean flush) {
+        WriteTask task = RECYCLER.get();
+        init(task, ctx, msg, promise, flush);
+        return task;
+    }
+
+
+    // 预估提交的任务大小
+    private static final boolean ESTIMATE_TASK_SIZE_ON_SUBMIT =
+            SystemPropertyUtil.getBoolean("io.netty.transport.estimateSizeOnSubmit", true);
+
+    // Assuming compressed oops, 12 bytes obj header, 4 ref fields and one int field
+    // 假设压缩oops，12个字节的obj头，4个ref字段和一个int字段
+    private static final int WRITE_TASK_OVERHEAD =
+            SystemPropertyUtil.getInt("io.netty.transport.writeTaskSizeOverhead", 32);
+
+    private final Handle<WriteTask> handle;
+    private AbstractChannelHandlerContext ctx;
+    private Object msg;
+    private ChannelPromise promise;
+    private int size; // sign bit controls flush
+
+    @SuppressWarnings("unchecked")
+    private WriteTask(Handle<? extends WriteTask> handle) {
+        this.handle = (Handle<WriteTask>) handle;
+    }
+
+    protected static void init(WriteTask task, AbstractChannelHandlerContext ctx,
+                               Object msg, ChannelPromise promise, boolean flush) {
+        task.ctx = ctx;
+        task.msg = msg;
+        task.promise = promise;
+
+        // 如果预估任务大小开启了就计算
+        if (ESTIMATE_TASK_SIZE_ON_SUBMIT) {
+            // 当前msg大小 加上写入任务
+            task.size = ctx.pipeline.estimatorHandle().size(msg) + WRITE_TASK_OVERHEAD;
+            // 新增pipline的出站字节数
+            ctx.pipeline.incrementPendingOutboundBytes(task.size);
+        } else {
+            task.size = 0;
         }
-
-        // 减少待出站的字节数
-        private void decrementPendingOutboundBytes() {
-            if (ESTIMATE_TASK_SIZE_ON_SUBMIT) {
-                ctx.pipeline.decrementPendingOutboundBytes(size & Integer.MAX_VALUE);
-            }
-        }
-
-        private void recycle() {
-            // Set to null so the GC can collect them directly
-            ctx = null;
-            msg = null;
-            promise = null;
-            handle.recycle(this);
+        // 通过位运算，标记这个Task是否需要flush
+        if (flush) {
+            task.size |= Integer.MIN_VALUE;
         }
     }
 
+    @Override
+    public void run() {
+        try {
+            // 减少待出站字节数
+            decrementPendingOutboundBytes();
+            if (size >= 0) {
+                ctx.invokeWrite(msg, promise);
+            } else {
+                ctx.invokeWriteAndFlush(msg, promise);
+            }
+        } finally {
+            recycle();
+        }
+    }
+
+    void cancel() {
+        try {
+            decrementPendingOutboundBytes();
+        } finally {
+            recycle();
+        }
+    }
+
+    // 减少待出站的字节数
+    private void decrementPendingOutboundBytes() {
+        if (ESTIMATE_TASK_SIZE_ON_SUBMIT) {
+            ctx.pipeline.decrementPendingOutboundBytes(size & Integer.MAX_VALUE);
+        }
+    }
+
+    private void recycle() {
+        // Set to null so the GC can collect them directly
+        ctx = null;
+        msg = null;
+        promise = null;
+        handle.recycle(this);
+    }
+}
+
+    /**
+     * 这个Tasks是静态的且不可改变的类
+     * 定义了几个变量一个是AbstactChannelHandleContext类型 next变量
+     * Runnable 类型 invokeChannelReadCompleteTask变量，执行AbstractChannelHandleContext.invokeChannelReadComplete()方法
+     * Runnable 类型 invokeReadTask变量，执行AbstractChannelHandleContext.invokeRead()方法
+     * Runnable 类型 invokeChannelWritableStateChangedTask 变量， 执行执行AbstractChannelHandleContext.invokeChannelWritabilityChanged()方法
+     * Runnable 类型 invokeFlushTask 变量，执行AbstractChannelHandleContext.invokeFlush()方法
+     *
+     */
     private static final class Tasks {
         private final AbstractChannelHandlerContext next;
         private final Runnable invokeChannelReadCompleteTask = new Runnable() {

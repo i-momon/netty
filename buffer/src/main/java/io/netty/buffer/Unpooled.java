@@ -46,10 +46,13 @@ import java.util.Arrays;
  * <h3>Allocating a new buffer</h3>
  *
  * Three buffer types are provided out of the box.
+ * 提供了三种现成的buffer类型
  *
  * <ul>
  * <li>{@link #buffer(int)} allocates a new fixed-capacity heap buffer.</li>
+ * // 创建一个固定大小的堆buffer
  * <li>{@link #directBuffer(int)} allocates a new fixed-capacity direct buffer.</li>
+ * // 创建一个固定大小的直接buffer
  * </ul>
  *
  * <h3>Creating a wrapped buffer</h3>

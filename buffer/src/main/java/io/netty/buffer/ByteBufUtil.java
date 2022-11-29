@@ -130,6 +130,7 @@ public final class ByteBufUtil {
     /**
      * Returns a <a href="https://en.wikipedia.org/wiki/Hex_dump">hex dump</a>
      * of the specified buffer's readable bytes.
+     * 返回ByteBuf可读字节 转为十六进制返回
      */
     public static String hexDump(ByteBuf buffer) {
         return hexDump(buffer, buffer.readerIndex(), buffer.readableBytes());
@@ -229,6 +230,7 @@ public final class ByteBufUtil {
      * Returns the reader index of needle in haystack, or -1 if needle is not in haystack.
      * This method uses the <a href="https://en.wikipedia.org/wiki/Two-way_string-matching_algorithm">Two-Way
      * string matching algorithm</a>, which yields O(1) space complexity and excellent performance.
+     * 在haystack中搜索needle，如果在haystack中没有搜索到则返回-1
      */
     public static int indexOf(ByteBuf needle, ByteBuf haystack) {
         if (haystack == null || needle == null) {
